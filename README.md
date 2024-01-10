@@ -52,7 +52,7 @@ The code has none non-standard hardware requirements. The code has been tested i
 The conventional method to calculate heart rate involves inferring how many beats one would expect per minute on average given the observation of $N_\text{b}$ beats over a period of time of $T$ seconds, which leads to the estimate $\text{HR}=60 N_\text{b} / T$. 
 If one is interested in a dynamical description of how the heart rate fluctuates over time, one can follow the same rationale and reduce the time period to the limit where $N_\text{b}\to1$ and $T$ becomes equal to the inter-beat interval $I_\text{b}$,  leading to the following estimate of the ``instantaneous'' heart rate:
 
-$$\text{HR}_\text{freq}(t) = \frac{60}{I_\text{b}(t)}.$$
+$$\text{HR}(t) = \frac{60}{I_\text{b}(t)}.$$
 
 From a statistical perspective, this expression can be understood as the outcome of an elementary frequentist method of inference that delivers a point estimate for the average number of beats per minute - in fact, it is the number of beats one would see if all beats were separated by the same inter-beat interval $I_\text{b}$. As such, it has the strengths and weaknesses of frequentist approaches: it is conceptually simple and computationally lightweight, although it cannot estimate its own uncertainty or incorporate prior knowledge on plausible heart rate values. Furthermore, as $\text{HR}(t)$ ignores previous inter-beat interval values, errors in the estimation of $I_\text{b}(t)$ inevitably lead to overestimations of heart rate fluctuations.
 
