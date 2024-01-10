@@ -13,7 +13,9 @@ Please cite these papers - and let us know! - if you use this software. Please c
 
 ## Download, installation, and code examples
 
-The estimation of HR dynamics is done by the file _generate_hr.py_. This code works in Python but calls the function _gmc_inference.jl_ which runs on Julia. To let the Python code to call Julia you need to install the package [PyJulia](https://pyjulia.readthedocs.io/en/latest/index.html). A brief example of how this code is used is provided in the file, which goes as follows:
+The software requires no installation, just normal repository cloning - which should take just a few seconds.
+
+The estimation of HR dynamics is done by the file _generate_hr.py_. This code works in Python 3, but calls the function _gmc_inference.jl_ which runs on Julia. To let the Python code to call Julia you need to install the package [PyJulia](https://pyjulia.readthedocs.io/en/latest/index.html). A brief example of how this code is used is provided in the file, which goes as follows:
 
 ```python
     # Define list of filenames 
@@ -24,7 +26,9 @@ The estimation of HR dynamics is done by the file _generate_hr.py_. This code wo
     freq_hr  = frequentist_hr(filenames)
 ```
 
-The calculation of HR entropy is done by the file _calculate_HRentropy.py_. This code works in Python but calls Java code. For this, it needs the Python package [JPype](https://pypi.org/project/JPype1/). A small example of how the code works is provided in the file:
+This code should generate a Pandas dataframe, where each of the `IT` column correspond to one sampled trajectory from the posterior distribution (see below). For comparison, the code also calculates the standard frequentist estimation of HR dynamics.
+
+The calculation of HR entropy is done by the file _calculate_HRentropy.py_. This code works in Python 3, but calls Java code. For this, it needs the Python package [JPype](https://pypi.org/project/JPype1/). A small example of how the code works is provided in the file:
 
 ```python
     # Load Bayesian estimations
@@ -34,8 +38,13 @@ The calculation of HR entropy is done by the file _calculate_HRentropy.py_. This
     data_diff = data.diff().dropna()
     lz = ctw_entropy( data_diff)
     mean_lz = lz.mean()
-    print('Average HR entropy: ', mean_lz)
 ```
+
+This code generates a Pandas series `lz` which contains the calculated entropy of each trajectory, which corresponds to the posterior distribution of this property (see below). Above, we are calculating the mean value of this posterior.
+
+Runtime of the generation of sampled trajectories of this example should take less than a minute; however, estimating hundreds of samples from e.g. 5mins ECG data can take a couple of hours on a typical laptop. The calculation of the HR entropy depends on the number of sampled trajectories, but should take not more than tens of minutes on a regular laptop even if there are hundreds of samples.
+
+The code has none non-standard hardware requirements. The code has been tested in Python 3.9 and Julia 1.9.4.
 
 
 ## Background: A Bayesian approach for the estimation of HR dynamics
