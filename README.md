@@ -61,7 +61,7 @@ Our model involves two time series corresponding to the values of a dynamical pr
 during a temporal bin of length $\Delta t$, and $z_t$, which is the heart rate that drives the corresponding heart beats. 
 Our framework comprises a generative statistical model, the key component of which is a probability distribution $p$ that describes the likelihood of observing a given sequence of heart beats $x_1,\dots,x_N$ together with a heart rate time series $z_1,\dots,z_N$ .
 
-![alt text](https://github.com/ferosas/BayesianAtHeart/blob/[branch]/image.jpg?raw=true)
+![alt text](https://github.com/ferosas/BayesianAtHeart/blob/main/SSDiagram.pdf?raw=true)
 
 Through this model, heart rate dynamics are now described not by a point estimate (i.e. as a single, most likely trajectory) but as obeying the following conditional distribution:
 
