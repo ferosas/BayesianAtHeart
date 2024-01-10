@@ -2,11 +2,11 @@
 
 This code allows to estimate HR dynamics following a Bayesian paradigm (i.e. via sampling a posterior distribution), as outlined in the paper:
 
-_Rosas, Candia-Rivera, Luppi, Guo, & Mediano, (2023). Bayesian at heart: Towards autonomic outflow estimation via generative state-space modelling of heart rate dynamics. arXiv preprint arXiv:2303.04863._
+- _Rosas, Candia-Rivera, Luppi, Guo, & Mediano, (2023). Bayesian at heart: Towards autonomic outflow estimation via generative state-space modelling of heart rate dynamics. Accepted for publication in Computers in Biology and Medicine._
 
 Additionally, this code also allows to calculate Bayesian estiamtes of HR entropy as presented in the paper:
 
-_Rosas*, Mediano*, et al. (2023). The entropic heart: Tracking the psychedelic state via heart rate dynamics. bioRxiv, 2023-11._
+- _Rosas*, Mediano*, et al. (2023). The entropic heart: Tracking the psychedelic state via heart rate dynamics. bioRxiv, 2023-11._
 
 Please cite these papers - and let us know! - if you use this software. Please contact Fernando Rosas for bug reports, pull requests, and featrure requests.
 
@@ -50,8 +50,7 @@ The code has none non-standard hardware requirements. The code has been tested i
 ## Background: A Bayesian approach for the estimation of HR dynamics
 
 The conventional method to calculate heart rate involves inferring how many beats one would expect per minute on average given the observation of $N_\text{b}$ beats over a period of time of $T$ seconds, which leads to the estimate $\text{HR}=60 N_\text{b} / T$. 
-If one is interested in a dynamical description of how the heart rate fluctuates over time, one can follow the same rationale and reduce the time period to the limit where $N_\text{b}\to1$ and $T$ becomes equal to the inter-beat interval $I_\text{b}$,  leading to the following estimate of the ``instantaneous'' heart rate:
-
+If one is interested in a dynamical description of how the heart rate fluctuates over time, one can follow the same rationale and reduce the time period to the limit where $N_\text{b}\to1$ and $T$ becomes equal to the inter-beat interval $I_\text{b}$,  leading to the following estimate of the "instantaneous" heart rate:
 $$\text{HR}(t) = \frac{60}{I_\text{b}(t)}.$$
 
 From a statistical perspective, this expression can be understood as the outcome of an elementary frequentist method of inference that delivers a point estimate for the average number of beats per minute - in fact, it is the number of beats one would see if all beats were separated by the same inter-beat interval $I_\text{b}$. As such, it has the strengths and weaknesses of frequentist approaches: it is conceptually simple and computationally lightweight, although it cannot estimate its own uncertainty or incorporate prior knowledge on plausible heart rate values. Furthermore, as $\text{HR}(t)$ ignores previous inter-beat interval values, errors in the estimation of $I_\text{b}(t)$ inevitably lead to overestimations of heart rate fluctuations.
@@ -66,7 +65,6 @@ Our framework comprises a generative statistical model, the key component of whi
 </p>
 
 Through this model, heart rate dynamics are now described not by a point estimate (i.e. as a single, most likely trajectory) but as obeying the following conditional distribution:
-
 $$\text{HR}_\text{bayes}: \quad z_1,\dots,z_N \sim  p(z_1,\dots,z_N|x_1,\dots,x_N).$$
 
 This posterior distribution describes the most likely heart rate trajectories $z_1,\dots,z_N$ given the observed data $x_1,\dots,x_N$. 
@@ -82,13 +80,26 @@ The sampling procedure employs two hyperparamenters $\theta$ and $\tau$, which a
 ## Background: Bayesian estimators of HR entropy
 
 The sampled trajectories of heart rate dynamics to build Bayesian estimators of properties of heart rate dynamics. To explain this part of the method, we introduce the shorthand notation $z = (z_1,\dots,z_T)$ and $x = (x_1,\dots,x_T)$ for sampled trajectories of heart rate and heart beats respectively, and let $F(z)$ be a scalar function of this trajectory - i.e. any scalar property of the heart rate trajectory, such as its mean value or entropy. Then, the generative model above can be used to derive the posterior distribution of the property $F$, which corresponds to $p(F(z) |x)$. Sampled trajectories can be used to estimate various properties of this posterior - e.g. its mean:
-
-$\hat{F} = \sum_{z} F(z) p(z|x), $ 
-
+$$\hat{F} = \sum_{z} F(z) p(z|x), $$
 where the value of the property $F$ for each possible trajectory is weighted by the likelihood of such trajectory given the observed data. We use this approach to estimate the entropy of HR dynamics as explained below.
 
-Brain entropy in neuroimaging data is usually calculated via Lempel-Ziv complexity (referred to as LZ), which estimates how diverse the patterns exhibited by a given signal. The method was introduced by engineers Abraham Lempel and Jacob Ziv to study the statistics of binary sequences (later becoming the basis of the well-known _zip_ compression algorithm), and has been used to study patterns in brain activity for more than 20 years. Unfortunately, there are two issues that make it challenging to apply LZ complexity to heart rate data: the need of a binarisation step combined with the non-stationarity of the time series (observed here in all drugs except LSD), and the relatively short length of the time series (LZ is usually estimated on brain data over windows of thousands of samples, which is challenging with a sampling frequency of 1 Hz). We addressed these challenges with two innovations:
+Brain entropy in neuroimaging data is usually calculated via [Lempel-Ziv complexity](https://information-dynamics.github.io/complexity/information/2019/06/26/lempel-ziv.html) (referred to as LZ), which estimates how diverse the patterns exhibited by a given signal. The method was introduced by engineers Abraham Lempel and Jacob Ziv to study the statistics of binary sequences (later becoming the basis of the well-known _zip_ compression algorithm), and has been used to study patterns in brain activity for more than 20 years. Unfortunately, there are two issues that make it challenging to apply LZ complexity to heart rate data: the need of a binarisation step combined with the non-stationarity of the time series (observed here in all drugs except LSD), and the relatively short length of the time series (LZ is usually estimated on brain data over windows of thousands of samples, which is challenging with a sampling frequency of 1 Hz). We addressed these challenges with two innovations:
 
 - First, entropy estimation in neuroimaging requires the binarisation of the data, which is often done by thresholding on the signal's mean value. While this particular choice usually doesn't have a big impact on the entropy estimates, it becomes problematic with highly non-stationary data, as it could lead to an underestimation of the entropy due to long periods of the signal being either above or bellow its mean value. To avoid this problem, instead of thresholding based on the mean value, we threshold according to the sign of the derivative - hence a '1' implies the signal is increasing and a '0' that it is decreasing.
 
-- To address the issue of the low sampling frequency and resulting short length of the time series data, we don't use the classic LZ algorithm but instead estimate entropy using the _Context Tree Weighted_ (CTW) algorithm. This algorithm has shown to converge quicker than other entropy rate estimators including LZ.
+- To address the issue of the low sampling frequency and resulting short length of the time series data, we don't use the classic LZ algorithm but instead estimate entropy using the [Context-tree Weighting (CTW)](https://ieeexplore.ieee.org/abstract/document/382012) algorithm. This algorithm has shown to converge quicker than other entropy rate estimators including LZ.
+
+## Further reading
+
+- _Rosas, Candia-Rivera, Luppi, Guo, & Mediano, (2023). [Bayesian at heart: Towards autonomic outflow estimation via generative state-space modelling of heart rate dynamics](https://www.sciencedirect.com/science/article/pii/S0010482523013227). Accepted for publication in Computers in Biology and Medicine._
+
+This paper introduces the Bayesian framework to estimate HR dynamics. Here you can find more details on how the framework works, how to tune hyperparameters, etc.
+
+- _Rosas*, Mediano*, et al. (2023). [The entropic heart: Tracking the psychedelic state via heart rate dynamics](https://www.biorxiv.org/content/10.1101/2023.11.07.566008v1). bioRxiv, 2023-11._
+
+This paper presents the idea of measuring HR entropy via a Bayesian estimation of CTW. It showcase its power analysing heart activity of human subjects under psychedelics.
+
+- _Mediano*, Rosas*, et al. (2023). [Spectrally and temporally resolved estimation of neural signal diversity](https://www.biorxiv.org/content/10.1101/2023.03.30.534922v1.abstract). bioRxiv, 2023-03._
+
+This paper provides an in-depth discussion of the LZ algorithm.
+
