@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     # Calculate HR entropy
     data_diff = data.diff().dropna()
-    lz = ctw_entropy( data_diff)
-    mean_lz = lz.mean()
-    print('Average HR entropy: ', mean_lz)
+    h = ctw_entropy(data_diff)
+    mean_h = h.mean()
+    print('Average HR entropy: ', h.mean())
 
