@@ -1,19 +1,20 @@
-###################################################################################
-# Bayesian estimation of heart rate dynamics
-#
-# This script takes files with sequences of inter-beat intervals as inputs, 
-# and generate heart rate trajectories that are likely to have generated such data.
-#
-# Fernando Rosas & Pedro Mediano, March 2023
+"""
+Bayesian estimation of heart rate dynamics
 
-###################################################################################
+This script takes files with sequences of inter-beat intervals as inputs, and
+generate heart rate trajectories that are likely to have generated such data.
+
+Fernando Rosas & Pedro Mediano, March 2023
+"""
+
+#######################################################
 # Loading packages
 #######################################################
 import pandas as pd
 import numpy as np
-import os
 import scipy.interpolate as interpolate
-from julia import Julia
+from julia import Main as J
+
 
 #######################################################
 # Functions
@@ -51,7 +52,7 @@ def hr_interpolate(L_data, fs=1):
             df_out.loc[time_ix,c] = F(time_ix) # carrying out the actual interpolation
         L_out.append(df_out)
 
-    return L_out
+    return L_out[0]
 
 
 def frequentist_hr(filenames, verbose=1):
@@ -95,7 +96,7 @@ def frequentist_hr(filenames, verbose=1):
     return hr_aligned
 
 
-def bayesian_hr(filenames, script_location=None, IT=3, theta=1., tau=1., Nr=20000, Nd=5000, rol=9, w_type='triang', dec=3, fs=1, verbose=1):
+def bayesian_hr(filenames, IT=3, theta=1., tau=1., Nr=20000, Nd=5000, rol=9, w_type='triang', dec=3, fs=1, verbose=1, script_location=None):
     """
     Function to generate Bayesian estimates of HR.
 
@@ -130,14 +131,11 @@ def bayesian_hr(filenames, script_location=None, IT=3, theta=1., tau=1., Nr=2000
         List of dataframes containing each sampled HR trajectory under equally sampled data
     """
     if script_location is None:
-        # If no script_location is provided, it assumes file is in the running folder
-        folder = os.path.dirname(os.path.realpath(__file__))
-        print('eh')
-        script_location = folder + '/gmc_inference.jl'
+        # If no script_location is provided, the script assumes file is in the running folder
+        script_location = 'gmc_inference.jl'
 
     # Call Julia script
-    j = Julia()
-    generate_hr = j.include(script_location) # Makes a wraper of the Julia function
+    generate_hr = J.include(script_location) # Makes a wraper of the Julia function
     data = generate_hr(filenames, IT, tau, theta, Nr, Nd, verbose) # Calls generate_hr script
 
     # Align data
@@ -167,19 +165,24 @@ if __name__ == '__main__':
     # Calculate Bayesian and frequentist estimation of HR
     bayes_hr = bayesian_hr(filenames, IT=3)
     freq_hr  = frequentist_hr(filenames)
+    
+    # Saving results
+    print('\nSaving results')
+    bayes_hr.to_csv('bayes_hr.csv')
+    freq_hr.to_csv('freq_hr.csv')
 
     # Plotting the resulting HR trajectories
+    print('\nPloting results')
     import matplotlib.pyplot as plt
     import seaborn as sns
     sns.set_style('whitegrid')
+    sns.set_palette('Set1')
 
-    X = bayes_hr[0]
-    X = X.reset_index().melt(id_vars='Time', var_name='Run', value_name='HR')
+    plt.plot(freq_hr.index, freq_hr.values, linewidth = 1.5, color='black')
+
+    X = bayes_hr.reset_index().melt(id_vars='Time', var_name='Run', value_name='HR')
     g = sns.lineplot(data=X, x='Time', y='HR', errorbar='sd', linewidth=1.5)
 
-    Y = freq_hr[0]
-    plt.plot( Y.index, Y.values, linewidth = 1.5)
-
-    plt.legend(['Bayesian','Frequentist'])
+    plt.legend(['Frequentist','Bayesian'])
     plt.show()
 
