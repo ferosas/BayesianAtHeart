@@ -13,9 +13,9 @@ Please cite these papers - and let us know! - if you use this software. Please c
 
 ## Download, installation, and code examples
 
-The software requires no installation, just normal repository cloning - which should take just a few seconds.
+The software requires no installation, just normal repository cloning -- which should take just a few seconds.
 
-The estimation of HR dynamics is done by the file _generate_hr.py_. This code works in Python 3, but calls the function _gmc_inference.jl_ which runs on Julia. To let the Python code to call Julia you need to install the package [PyJulia](https://pyjulia.readthedocs.io/en/latest/index.html). A brief example of how this code is used is provided in the file, which goes as follows:
+The estimation of HR dynamics is done by the file `generate_hr.py`. This code works in Python 3, but calls the function `gmc_inference.jl` which runs on Julia. To enable Julia calls from Python, these scripts use the package [PyJulia](https://pyjulia.readthedocs.io/en/latest/index.html). A brief example of how this code is used is provided in the `__main__` section of `generate_hr.py`:
 
 ```python
     # Define list of filenames 
@@ -26,25 +26,25 @@ The estimation of HR dynamics is done by the file _generate_hr.py_. This code wo
     freq_hr  = frequentist_hr(filenames)
 ```
 
-This code should generate a Pandas dataframe, where each of the `IT` column correspond to one sampled trajectory from the posterior distribution (see below). For comparison, the code also calculates the standard frequentist estimation of HR dynamics.
+This code generates a Pandas dataframe, where each of the `IT` columns corresponds to one sampled trajectory from the posterior distribution (see below). For comparison, the code also calculates the standard frequentist estimation of HR dynamics.
 
-The calculation of HR entropy is done by the file _calculate_HRentropy.py_. This code works in Python 3, but calls Java code. For this, it needs the Python package [JPype](https://pypi.org/project/JPype1/). A small example of how the code works is provided in the file:
+The calculation of HR entropy is done by the code in `calculate_HRentropy.py`. This code works in Python 3, but calls entropy estimators written in Java. For this, it uses the Python package [JPype](https://pypi.org/project/JPype1/). A small example of how the code works is provided in the `__main__` section of the file:
 
 ```python
     # Load Bayesian estimations
-    data = pd.read_csv('./bayes_hr.csv', index_col=0)
+    data = pd.read_csv('bayes_hr.csv', index_col=0)
 
     # Calculate HR entropy
     data_diff = data.diff().dropna()
-    lz = ctw_entropy( data_diff)
-    mean_lz = lz.mean()
+    h = ctw_entropy(data_diff)
+    mean_h = h.mean()
 ```
 
-This code generates a Pandas series `lz` which contains the calculated entropy of each trajectory, which corresponds to the posterior distribution of this property (see below). Above, we are calculating the mean value of this posterior.
+This code generates a Pandas series `h` which contains the calculated entropy of each trajectory, which corresponds to the posterior distribution of entropy (see below). Above, we are calculating the mean of this posterior.
 
-Runtime of the generation of sampled trajectories of this example should take less than a minute; however, estimating hundreds of samples from e.g. 5mins ECG data can take a couple of hours on a typical laptop. The calculation of the HR entropy depends on the number of sampled trajectories, but should take not more than tens of minutes on a regular laptop even if there are hundreds of samples.
+Runtime of the generation of sampled trajectories of this example should take less than a minute; however, estimating hundreds of samples from e.g. 5mins ECG data can take a couple of hours on a standard laptop. The calculation of the HR entropy depends on the number of sampled trajectories, but should take not more than tens of minutes on a regular laptop even if there are hundreds of samples.
 
-The code has none non-standard hardware requirements. The code has been tested in Python 3.9 and Julia 1.9.4.
+The code has been tested in Python 3.9 and Julia 1.9.4.
 
 
 ## Background: A Bayesian approach for the estimation of HR dynamics
@@ -53,7 +53,7 @@ The conventional method to calculate heart rate involves inferring how many beat
 If one is interested in a dynamical description of how the heart rate fluctuates over time, one can follow the same rationale and reduce the time period to the limit where $N_\text{b}\to1$ and $T$ becomes equal to the inter-beat interval $I_\text{b}$,  leading to the following estimate of the "instantaneous" heart rate:
 $$\text{HR}(t) = \frac{60}{I_\text{b}(t)}.$$
 
-From a statistical perspective, this expression can be understood as the outcome of an elementary frequentist method of inference that delivers a point estimate for the average number of beats per minute - in fact, it is the number of beats one would see if all beats were separated by the same inter-beat interval $I_\text{b}$. As such, it has the strengths and weaknesses of frequentist approaches: it is conceptually simple and computationally lightweight, although it cannot estimate its own uncertainty or incorporate prior knowledge on plausible heart rate values. Furthermore, as $\text{HR}(t)$ ignores previous inter-beat interval values, errors in the estimation of $I_\text{b}(t)$ inevitably lead to overestimations of heart rate fluctuations.
+From a statistical perspective, this expression can be understood as the outcome of an elementary frequentist method of inference that delivers a point estimate for the average number of beats per minute -- in fact, it is the number of beats one would see if all beats were separated by the same inter-beat interval $I_\text{b}$. As such, it has the strengths and weaknesses of frequentist approaches: it is conceptually simple and computationally lightweight, although it cannot estimate its own uncertainty or incorporate prior knowledge on plausible heart rate values. Furthermore, as $\text{HR}(t)$ ignores previous inter-beat interval values, errors in the estimation of $I_\text{b}(t)$ inevitably lead to overestimations of heart rate fluctuations.
 
 In contrast, our proposed approach conceives the heart rate as a hidden process that drives the actual observed heart beats, the statistical properties of which can be estimated via generative modelling.
 Our model involves two time series corresponding to the values of a dynamical process sampled with sampling frequency $f_\text{s} = 1/\Delta t$: $x_t$, which counts the number of heart beats that take place
@@ -77,9 +77,10 @@ This allows not only to find the most likely trajectory, but also to estimate un
 These sampled trajectories also allow us to build accurate estimators of non-linear properties of heart rate dynamics - as illustrated bellow with the calculation of HR entropy. 
 The sampling procedure employs two hyperparamenters $\theta$ and $\tau$, which are related with the connectivity strength between successive samples. In our experiments, sampled trajectories were seen to be fairly insensitive to the choice of $\tau$, while their smoothness strongly depended on $\theta$ - low values of $\theta$ induce a strong constraint between successive samples, making more unlikely abrupt changes of values.
 
+
 ## Background: Bayesian estimators of HR entropy
 
-The sampled trajectories of heart rate dynamics to build Bayesian estimators of properties of heart rate dynamics. To explain this part of the method, we introduce the shorthand notation $z = (z_1,\dots,z_T)$ and $x = (x_1,\dots,x_T)$ for sampled trajectories of heart rate and heart beats respectively, and let $F(z)$ be a scalar function of this trajectory - i.e. any scalar property of the heart rate trajectory, such as its mean value or entropy. Then, the generative model above can be used to derive the posterior distribution of the property $F$, which corresponds to $p(F(z) |x)$. Sampled trajectories can be used to estimate various properties of this posterior - e.g. its mean:
+The sampled trajectories of heart rate dynamics to build Bayesian estimators of properties of heart rate dynamics. To explain this part of the method, we introduce the shorthand notation $z = (z_1,\dots,z_T)$ and $x = (x_1,\dots,x_T)$ for sampled trajectories of heart rate and heart beats respectively, and let $F(z)$ be a scalar function of this trajectory - i.e. any scalar property of the heart rate trajectory, such as its mean value or entropy. Then, the generative model above can be used to derive the posterior distribution of the property $F$, which corresponds to $p(F(z)|x)$. Sampled trajectories can be used to estimate various properties of this posterior -- e.g. its mean:
 $$\hat{F} = \sum_{z} F(z) p(z|x), $$
 where the value of the property $F$ for each possible trajectory is weighted by the likelihood of such trajectory given the observed data. We use this approach to estimate the entropy of HR dynamics as explained below.
 
@@ -88,6 +89,7 @@ Brain entropy in neuroimaging data is usually calculated via [Lempel-Ziv complex
 - First, entropy estimation in neuroimaging requires the binarisation of the data, which is often done by thresholding on the signal's mean value. While this particular choice usually doesn't have a big impact on the entropy estimates, it becomes problematic with highly non-stationary data, as it could lead to an underestimation of the entropy due to long periods of the signal being either above or bellow its mean value. To avoid this problem, instead of thresholding based on the mean value, we threshold according to the sign of the derivative - hence a '1' implies the signal is increasing and a '0' that it is decreasing.
 
 - To address the issue of the low sampling frequency and resulting short length of the time series data, we don't use the classic LZ algorithm but instead estimate entropy using the [Context-tree Weighting (CTW)](https://ieeexplore.ieee.org/abstract/document/382012) algorithm. This algorithm has shown to converge quicker than other entropy rate estimators including LZ.
+
 
 ## Further reading
 
@@ -101,5 +103,5 @@ This paper presents the idea of measuring HR entropy via a Bayesian estimation o
 
 - _Mediano*, Rosas*, et al. (2023). [Spectrally and temporally resolved estimation of neural signal diversity](https://www.biorxiv.org/content/10.1101/2023.03.30.534922v1.abstract). bioRxiv, 2023-03._
 
-This paper provides an in-depth discussion of the LZ algorithm.
+This paper provides an in-depth discussion of the LZ algorithm and related approaches to calculate entropy in time series data.
 
